@@ -1,0 +1,63 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-6">
+            <div class="p-3 border rounded" style="max-width: 400px;">
+                <h2 class="fs-5">Sign In</h2> 
+                <form id="registrationForm">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-2">
+                        <label for="login" class="form-label">Username</label>
+                        <input type="text" class="form-control form-control-sm" id="login" name="login" required>
+                    </div>
+                    <div class="mb-2">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control form-control-sm" id="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm w-100">Sign In</button>
+                </form>
+                <div id="message" class="mt-2"></div> 
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const login = document.getElementById('login').value;
+            const password = document.getElementById('password').value;
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            const response = await fetch('/?handler=Register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ login, password })
+            });
+
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const text = await response.text();
+                console.error("Non-JSON response:", text);
+                document.getElementById('message').className = 'mt-3 alert alert-danger';
+                document.getElementById('message').textContent = "Ошибка сервера: получен недопустимый ответ.";
+                return;
+            }
+
+            const result = await response.json();
+            const msg = document.getElementById('message');
+            msg.className = 'mt-3 alert ' + (result.success ? 'alert-success' : 'alert-danger');
+            msg.textContent = result.message;
+        });
+    </script>
+}
